@@ -2,6 +2,16 @@
 
 A Python-based soft robotics simulator for designing and testing deformable robots with various gaits and configurations.
 
+Created by the MODELO KIND ENGINEERING TEAM:
+
+Daniel Motilla (M0TH)
+Frederick Ayala
+Davide Vigano
+Oyvind Soroy (Colonthree)
+Drake (Yoshi)
+
+We hope you have fun your our software :3
+
 ## Quick Start
 
 1. Install dependencies:
@@ -23,7 +33,6 @@ python modelito.py
 The repository includes example robots:
 - `quadruped_robot.robot`: A four-legged walking robot
 - `worm_robot.robot`: A segmented robot with undulating motion
-- `spider_robot.robot`: A six-legged robot with tripod gait
 
 ## Key Features
 
