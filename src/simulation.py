@@ -2,13 +2,45 @@ import numpy as np
 from vedo import Volume, show, ProgressBar, Box
 import matplotlib.pyplot as plt
 from scipy.spatial import cKDTree
+from matplotlib.animation import FuncAnimation
 
 from language import RobotDef
 from geometry_creation import create_geometry
 
 # ============ SIMULATION ============
 
-def simulate_robot(robot: RobotDef, duration=60.0, nsteps=1200):
+def plot_gait_data(time_points, positions, heights, part_names):
+    """Plot gait visualization in a separate window"""
+    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(10, 8))
+    fig.suptitle('Soft Robot Gait Analysis', fontsize=14)
+    
+    # Set a clean style
+    for ax in (ax1, ax2):
+        ax.grid(True, linestyle='--', alpha=0.7)
+        ax.set_facecolor('#f8f8f8')
+    
+    # Plot forward progress
+    ax1.plot(time_points, positions, 'b-', label='Forward Position')
+    ax1.set_xlabel('Time (s)')
+    ax1.set_ylabel('X Position')
+    ax1.set_title('Forward Progress')
+    ax1.grid(True)
+    ax1.legend()
+    
+    # Plot height variations for each part
+    for part_name, height_data in heights.items():
+        ax2.plot(time_points, height_data, label=part_name)
+    
+    ax2.set_xlabel('Time (s)')
+    ax2.set_ylabel('Height (Y)')
+    ax2.set_title('Part Height Variations')
+    ax2.grid(True)
+    ax2.legend()
+    
+    plt.tight_layout()
+    plt.show(block=False)
+
+def simulate_robot(robot: RobotDef, duration=60.0, nsteps=1200, plot_gait=True):
     """Run physics simulation"""
     
     print("Creating geometry...")
@@ -113,6 +145,12 @@ def simulate_robot(robot: RobotDef, duration=60.0, nsteps=1200):
     # Physics state
     velocity = np.zeros_like(initial_points)
     local_deformation = np.zeros_like(initial_points)
+    
+    # Data collection for gait analysis
+    time_points = []
+    positions = []
+    heights = {name: [] for name in part_indices.keys()}
+    heights['body'] = []
     global_position = np.array([0.0, 0.0, 0.0])
     global_velocity = np.array([0.0, 0.0, 0.0])
     
@@ -267,6 +305,21 @@ def simulate_robot(robot: RobotDef, duration=60.0, nsteps=1200):
         
         if step % 10 == 0:
             pb.print(f"Time: {t:.2f}s | Pos: {global_position[0]:.2f}")
+            
+            # Collect data for gait analysis
+            time_points.append(t)
+            positions.append(global_position[0])
+            
+            # Record heights of each part
+            for part_name, indices in part_indices.items():
+                avg_height = np.mean(current_points[indices, 1])
+                heights[part_name].append(avg_height)
+            avg_body_height = np.mean(current_points[body_indices, 1])
+            heights['body'].append(avg_body_height)
+    
+    # Plot gait analysis if requested
+    if plot_gait:
+        plot_gait_data(time_points, positions, heights, part_indices.keys())
 
 def apply_quadruped_gait(actuation_force, t, actuator, part_indices, foot_indices, body_indices):
     """Apply quadruped walking gait"""
